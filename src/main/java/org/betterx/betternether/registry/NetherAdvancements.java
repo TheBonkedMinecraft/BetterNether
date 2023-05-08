@@ -202,17 +202,5 @@ public class NetherAdvancements {
                 )
                 .requirements(RequirementsStrategy.AND)
                 .buildAndRegister();
-
-
-        ResourceLocation allTheBiomes = AdvancementManager.Builder
-                .create(BetterNether.makeID("all_the_biomes"))
-                .parent(city)
-                .startDisplay(NetherItems.NETHER_RUBY_SET.getSlot(EquipmentSet.BOOTS_SLOT))
-                .frame(FrameType.CHALLENGE)
-                .endDisplay()
-                .addVisitBiomesCriterion(NetherBiomes.ALL_BN_BIOMES.stream().map(b -> b.getBiomeKey()).toList())
-                .requirements(RequirementsStrategy.AND)
-                .rewardXP(1500)
-                .buildAndRegister();
     }
 }

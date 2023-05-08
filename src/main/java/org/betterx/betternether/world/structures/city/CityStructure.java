@@ -3,7 +3,6 @@ package org.betterx.betternether.world.structures.city;
 import org.betterx.bclib.api.v2.levelgen.structures.BCLStructure;
 import org.betterx.betternether.BetterNether;
 import org.betterx.betternether.config.Configs;
-import org.betterx.betternether.registry.NetherBiomes;
 import org.betterx.betternether.registry.NetherStructures;
 import org.betterx.betternether.world.structures.city.palette.Palettes;
 import org.betterx.betternether.world.structures.piece.CavePiece;
@@ -83,7 +82,7 @@ public class CityStructure extends Structure {
         if (!(chunkGenerator instanceof FlatLevelSource)) {
             CavePiece cave = new CavePiece(
                     center,
-                    radius + (NetherBiomes.useLegacyGeneration ? 0 : 8),
+                    radius +  8,
                     random,
                     cityBox
             );

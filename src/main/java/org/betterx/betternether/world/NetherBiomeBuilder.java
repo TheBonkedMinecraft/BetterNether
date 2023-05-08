@@ -32,7 +32,6 @@ public class NetherBiomeBuilder {
     private static final RandomSource RANDOM = new LegacyRandomSource(130520221830l);
     private static Biome BASE_BIOME;
     static final SurfaceRules.RuleSource BEDROCK = SurfaceRules.state(Blocks.BEDROCK.defaultBlockState());
-    //(ResourceLocation randomName, VerticalAnchor trueAtAndBelow, VerticalAnchor falseAtAndAbove)
     static final SurfaceRules.VerticalGradientConditionSource BEDROCK_BOTTOM =
             new SurfaceRules.VerticalGradientConditionSource(
                     BetterNether.makeID("bedrock_floor"),

@@ -5,7 +5,6 @@ import org.betterx.bclib.api.v3.levelgen.features.BCLFeature;
 import org.betterx.betternether.BlocksHelper;
 import org.betterx.betternether.mixin.common.BlockBehaviourAccessor;
 import org.betterx.betternether.mixin.common.BlockBehaviourPropertiesAccessor;
-import org.betterx.betternether.registry.NetherBiomes;
 import org.betterx.betternether.registry.NetherBlocks;
 import org.betterx.betternether.registry.features.placed.NetherVegetationPlaced;
 import org.betterx.betternether.world.NetherBiome;
@@ -100,10 +99,6 @@ public class CommandRegistry {
                                       .requires(source -> source.hasPermission(Commands.LEVEL_OWNERS))
                                       .executes(ctx -> findSurface(ctx))
                         )
-                        .then(Commands.literal("tpnext")
-                                      .requires(source -> source.hasPermission(Commands.LEVEL_OWNERS))
-                                      .executes(ctx -> teleportToNextBiome(ctx))
-                        )
                         .then(Commands.literal("place_all")
                                       .requires(source -> source.hasPermission(Commands.LEVEL_OWNERS))
                                       .executes(ctx -> placeAllBlocks(ctx))
@@ -122,95 +117,6 @@ public class CommandRegistry {
         );
     }
 
-    private static int biomeIndex = 0;
-
-    private static int teleportToNextBiome(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        final CommandSourceStack source = ctx.getSource();
-        List<NetherBiome> biomes = NetherBiomes.ALL_BN_BIOMES;
-
-        if (biomeIndex < 0 || biomeIndex >= biomes.size()) {
-            source.sendFailure(Component.literal("Failed to find the next Biome...")
-                                        .setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
-            return 0;
-        }
-        final BCLBiome biome = biomes.get(biomeIndex);
-        source.sendSuccess(Component.literal("Locating Biome " + biome)
-                                    .setStyle(Style.EMPTY.withColor(ChatFormatting.DARK_GREEN)), false);
-        biomeIndex = (biomeIndex + 1) % biomes.size();
-
-        final BlockPos currentPosition = new BlockPos(source.getPosition());
-        final BlockPos biomePosition = source.getLevel()
-                                             .findClosestBiome3d(
-                                                     b -> b.unwrapKey().orElseThrow().location().equals(biome.getID()),
-                                                     currentPosition,
-                                                     MAX_SEARCH_RADIUS,
-                                                     SAMPLE_RESOLUTION_HORIZONTAL,
-                                                     SAMPLE_RESOLUTION_VERTICAL
-                                             )
-                                             .getFirst();
-        final String biomeName = biome.toString();
-
-        if (biomePosition == null) {
-            throw ERROR_BIOME_NOT_FOUND.create(biomeName);
-        } else {
-            final ServerPlayer player = source.getPlayerOrException();
-            BlockState state;
-            BlockPos target;
-            double yPos = source.getPosition().y();
-            boolean didWrap = false;
-            do {
-                target = new BlockPos(biomePosition.getX(), yPos, biomePosition.getZ());
-                state = player.level.getBlockState(target);
-                yPos--;
-                if (yPos <= player.level.getMinBuildHeight() + 1) {
-                    if (didWrap) break;
-                    yPos = 127;
-                    didWrap = true;
-                }
-            } while (!state.isAir() && yPos > player.level.getMinBuildHeight() && yPos < player.level.getMaxBuildHeight());
-            Vector3d targetPlayerPos = new Vector3d(target.getX() + 0.5, target.getY() - 1, target.getZ() + 0.5);
-
-            player.connection.teleport(
-                    targetPlayerPos.x,
-                    targetPlayerPos.y,
-                    targetPlayerPos.z,
-                    0,
-                    0,
-                    Collections.EMPTY_SET
-            );
-            ResourceOrTagLocationArgument.Result result = new ResourceOrTagLocationArgument.Result() {
-                @Override
-                public Either<ResourceKey, TagKey> unwrap() {
-                    return Either.left(biome.getBiomeKey());
-                }
-
-                @Override
-                public Optional<ResourceOrTagLocationArgument.Result> cast(ResourceKey resourceKey) {
-                    return Optional.empty();
-                }
-
-                @Override
-                public String asPrintable() {
-                    return biomeName;
-                }
-
-                @Override
-                public boolean test(Object o) {
-                    return false;
-                }
-            };
-            ResourceKey<Biome> a = biome.getBiomeKey();
-            Holder<Biome> h = BuiltinRegistries.BIOME.getHolder(a).orElseThrow();
-            return LocateCommand.showLocateResult(
-                    source,
-                    result,
-                    currentPosition,
-                    new Pair<>(biomePosition, h),
-                    "commands.locatebiome.success",
-                    false
-            );
-        }
-    }
 
     private static int placeMatchingBlocks(
             CommandContext<CommandSourceStack> ctx,
@@ -292,6 +198,7 @@ public class CommandRegistry {
         return Command.SINGLE_SUCCESS;
     }
 
+    @SuppressWarnings("removal")
     private static int testPlace(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 
         final CommandSourceStack source = ctx.getSource();
